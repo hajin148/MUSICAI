@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "587873408728",
+    "firebase_url": "https://musicai-57d9c-default-rtdb.firebaseio.com",
+    "project_id": "musicai-57d9c",
+    "storage_bucket": "musicai-57d9c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:587873408728:android:52274c331cc56dd00769ad",
+        "android_client_info": {
+          "package_name": "com.dasoni.musicai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9_3DB5hIU8K2eK8blGBLJhvQgtBKMBhQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
