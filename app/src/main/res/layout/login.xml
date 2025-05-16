@@ -1,95 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingStart="32dp"
-    android:paddingEnd="32dp"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/main_text1"
-        style="@style/TextStyle_Display1"
-        android:textColor="@color/black"
-        android:layout_width="320dp"
+    <EditText
+        android:id="@+id/login_email"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="160dp"
-        android:text="@string/signin_title"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
-
-
-    <EditText
-        android:id="@+id/input_email"
-        style="@style/TextStyle_Input"
-        android:layout_width="320dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="100dp"
-        android:autofillHints="emailAddress"
-        android:ems="12"
-        android:hint="@string/hint_email"
+        android:layout_marginTop="50dp"
+        android:ems="10"
+        android:hint="Email"
         android:inputType="textEmailAddress"
-        android:drawablePadding="16dp"
-        android:drawableStart="@drawable/icon_email"
-        app:layout_constraintStart_toStartOf="@+id/main_text1"
-        app:layout_constraintTop_toBottomOf="@+id/main_text1" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <EditText
-        android:id="@+id/password"
-        style="@style/TextStyle_Input"
-        android:layout_width="320dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="40dp"
-        android:autofillHints="password"
-        android:drawableStart="@drawable/icon_pw"
-        android:drawablePadding="16dp"
-        android:ems="12"
-        android:hint="@string/hint_pw"
+        android:id="@+id/login_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:ems="10"
+        android:hint="password"
         android:inputType="textPassword"
-        app:layout_constraintStart_toStartOf="@+id/input_email"
-        app:layout_constraintTop_toBottomOf="@+id/input_email" />
-
-
-    <TextView
-        android:id="@+id/link_forgot_pw"
-        style="@style/TextStyle_Static_Regular"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:text="@string/forgotpassword"
-        app:layout_constraintStart_toStartOf="@+id/password"
-        app:layout_constraintTop_toBottomOf="@+id/password" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_sign_in"
-        style="@style/ButtonStyle_Primary"
-        android:layout_width="320dp"
-        android:layout_height="72dp"
-        android:layout_marginBottom="70dp"
-        android:text="@string/login"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_email" />
 
-    <TextView
-        android:id="@+id/link_signup"
-        style="@style/TextStyle_Static_Regular"
+    <Button
+        android:id="@+id/login_btn"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginTop="14dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:text="@string/signup"
-        app:layout_constraintEnd_toEndOf="@+id/button_sign_in"
-        app:layout_constraintStart_toStartOf="@+id/button_sign_in"
-        app:layout_constraintTop_toBottomOf="@+id/button_sign_in" />
-
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:text="로그인"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/login_password" />
 </androidx.constraintlayout.widget.ConstraintLayout>
