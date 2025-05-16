@@ -11,6 +11,7 @@ import com.google.firebase.database.FirebaseDatabase
 
 class MainActivity : AppCompatActivity() {
     var username = ""
+    var loggedinUser : User? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +35,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun logout() {
+        username = ""
+        loggedinUser = null
+        Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+        setMainPage()
+    }
     fun setLoginPage() {
         setContentView(R.layout.login)
 
@@ -61,6 +68,7 @@ class MainActivity : AppCompatActivity() {
                         foundUser = true
                         Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
                         username = user.username
+                        loggedinUser = user
                         setMainPage()
                         break
                     }
