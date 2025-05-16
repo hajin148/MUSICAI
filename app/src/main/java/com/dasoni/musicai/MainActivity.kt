@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.database.FirebaseDatabase
+import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity() {
     var username = ""
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         login_btn.setOnClickListener {
             val emailText = email.text.toString().trim()
             val passwordText = password.text.toString().trim()
+            val hashedPassword = hashPassword(passwordText)
 
             if (emailText.isEmpty() || passwordText.isEmpty()) {
                 Toast.makeText(this, "이메일과 비밀번호를 입력해주세요.", Toast.LENGTH_SHORT).show()
@@ -63,7 +65,8 @@ class MainActivity : AppCompatActivity() {
                 var foundUser = false
                 for (child in snapshot.children) {
                     val user = child.getValue(User::class.java)
-                    if (user != null && user.email == emailText && user.password == passwordText) {
+
+                    if (user != null && user.email == emailText && user.password == hashedPassword) {
                         foundUser = true
                         Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
                         username = user.username
@@ -109,7 +112,8 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val user = User(usernameText, emailText, passwordText, "active")
+            val hashedPassword = hashPassword(passwordText)
+            val user = User(usernameText, emailText, hashedPassword, "active")
 
             val database = FirebaseDatabase.getInstance()
             val ref = database.getReference("MUSICAI/users").push()
@@ -123,4 +127,11 @@ class MainActivity : AppCompatActivity() {
                 }
         }
     }
+
+    fun hashPassword(password: String): String {
+        val bytes = password.toByteArray()
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
 }
