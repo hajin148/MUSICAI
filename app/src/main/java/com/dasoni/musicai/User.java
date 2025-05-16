@@ -29,6 +29,12 @@ public class User implements Serializable {
         this.rhythmsLevel.put("etcs", 0);
     }
 
+    public User(String email, String password, String accountStatus) {
+        this.email = email;
+        this.password = password;
+        this.accountStatus = accountStatus;
+    }
+
     private String getCurrentDate() {
         return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
     }
