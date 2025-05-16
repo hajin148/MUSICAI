@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.database.FirebaseDatabase
-
+import android.content.Intent
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,9 +21,15 @@ class MainActivity : AppCompatActivity() {
     fun setMainPage() {
         setContentView(R.layout.activity_main)
         var button : Button = findViewById(R.id.button)
+        var button2 : Button = findViewById(R.id.button2)
 
         button.setOnClickListener{
             setRegisterPage()
+        }
+
+        button2.setOnClickListener{
+            val intent = Intent(this, SoundActivity::class.java)
+            startActivity(intent)
         }
     }
 
