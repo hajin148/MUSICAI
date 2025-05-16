@@ -8,7 +8,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.database.FirebaseDatabase
 
-
 class MainActivity : AppCompatActivity() {
     var username = ""
     var loggedinUser : User? = null
@@ -31,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         var username_display : TextView = findViewById(R.id.username_display)
 
         if (username != "") {
-            username_display.text = username
+            username_display.text = username + "님, 안녕하세요!"
         }
     }
 
