@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="TextStyle_Slogan">
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineSpacingExtra">22sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:textColor">@color/primary</item>
+    </style>
+
+    <style name="TextStyle_Display1">
+        <item name="android:textSize">32sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+    </style>
+
+    <style name="TextStyle_Display2">
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+    </style>
+
+    <style name="TextStyle_Static">
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_semibold</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextStyle_Static_Regular">
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextStyle_Error">
+        <item name="android:textSize">13sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:textColor">@color/error</item>
+    </style>
+
+    <style name="TextStyle_Input">
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineSpacingExtra">8sp</item>
+        <item name="android:letterSpacing">-0.025</item>
+        <item name="android:fontFamily">@font/pretendard_regular</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+
+
+
+
+    <style name="ButtonStyle_Primary" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">16dp</item>
+        <item name="backgroundTint">@color/primary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textAppearance">@style/TextStyle_Display2</item>
+    </style>
+
+
+
+
+
+
+
+
+</resources>
