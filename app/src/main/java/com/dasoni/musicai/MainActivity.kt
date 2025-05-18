@@ -1,16 +1,23 @@
 package com.dasoni.musicai
 
+import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Patterns
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-
+import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity() {
     var username = ""
+    var loggedinUser : User? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,10 +25,7 @@ class MainActivity : AppCompatActivity() {
     }
     fun setMainPage() {
         setContentView(R.layout.activity_main)
-        var register_btn : Button = findViewById(R.id.Register_btn)
-        register_btn.setOnClickListener{
-            setRegisterPage()
-        }
+
         var login_btn : Button = findViewById(R.id.Login_btn)
         login_btn.setOnClickListener {
             setLoginPage()
@@ -30,18 +34,72 @@ class MainActivity : AppCompatActivity() {
         var username_display : TextView = findViewById(R.id.username_display)
 
         if (username != "") {
-            username_display.text = username
+            username_display.text = username + "님, 안녕하세요!" + loggedinUser.toString()
         }
     }
+
+    fun setPasswordResetPage() {
+        setContentView(R.layout.password_reset)
+
+        val auth = FirebaseAuth.getInstance()
+        val back: ImageButton = findViewById(R.id.backButton)
+        back.setOnClickListener {
+            setMainPage()
+        }
+
+        val sendEmail: Button = findViewById(R.id.Link)
+        val linkTime: Button = findViewById(R.id.link_time)
+        val userEmail: EditText = findViewById(R.id.user_email)
+
+        sendEmail.setOnClickListener {
+            val email = userEmail.text.toString().trim()
+
+            if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(this, "유효한 이메일을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            auth.sendPasswordResetEmail(email)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Toast.makeText(this, "비밀번호 재설정 이메일이 전송되었습니다.", Toast.LENGTH_LONG).show()
+                        linkTime.visibility = View.VISIBLE
+                        sendEmail.visibility = View.VISIBLE
+
+                    } else {
+                        Toast.makeText(this, "이메일 전송 실패: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+        }
+        linkTime.setOnClickListener {
+            setContentView(R.layout.result_message_screen)
+            val btn_back : ImageView = findViewById(R.id.btn_back)
+            btn_back.setOnClickListener{
+                setLoginPage()
+            }
+        }
+    }
+
+
 
     fun setLoginPage() {
         setContentView(R.layout.login)
 
-        var email: EditText = findViewById(R.id.login_email)
-        var password: EditText = findViewById(R.id.login_password)
-        var login_btn: Button = findViewById(R.id.login_btn)
+        val email: EditText = findViewById(R.id.input_email)
+        val password: EditText = findViewById(R.id.password)
+        val loginBtn: Button = findViewById(R.id.button_sign_in)
+        val forgetpassword: TextView = findViewById(R.id.link_forgot_pw)
+        val register: TextView = findViewById(R.id.link_signup)
 
-        login_btn.setOnClickListener {
+        register.setOnClickListener {
+            setRegisterPage()
+        }
+
+        forgetpassword.setOnClickListener {
+            setPasswordResetPage()
+        }
+
+        loginBtn.setOnClickListener {
             val emailText = email.text.toString().trim()
             val passwordText = password.text.toString().trim()
 
@@ -50,47 +108,58 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val database = FirebaseDatabase.getInstance()
-            val ref = database.getReference("MUSICAI/users")
+            FirebaseAuth.getInstance()
+                .signInWithEmailAndPassword(emailText, passwordText)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-            ref.get().addOnSuccessListener { snapshot ->
-                var foundUser = false
-                for (child in snapshot.children) {
-                    val user = child.getValue(User::class.java)
-                    if (user != null && user.email == emailText && user.password == passwordText) {
-                        foundUser = true
-                        Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
-                        username = user.username
-                        setMainPage()
-                        break
+                        val ref = FirebaseDatabase.getInstance()
+                            .getReference("MUSICAI/users")
+                            .child(uid!!)
+
+                        ref.get().addOnSuccessListener { snapshot ->
+                            val user = snapshot.getValue(User::class.java)
+                            if (user != null) {
+                                username = user.username
+                                loggedinUser = user
+                                Toast.makeText(this, "로그인 성공!", Toast.LENGTH_SHORT).show()
+                                setMainPage()
+                            } else {
+                                Toast.makeText(this, "사용자 정보를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                            }
+                        }.addOnFailureListener {
+                            Toast.makeText(this, "유저 정보 로딩 실패: ${it.message}", Toast.LENGTH_SHORT).show()
+                        }
+
+                    } else {
+                        Toast.makeText(this, "로그인 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
-
-                if (!foundUser) {
-                    Toast.makeText(this, "이메일 또는 비밀번호가 올바르지 않습니다.", Toast.LENGTH_SHORT).show()
-                }
-
-            }.addOnFailureListener {
-                Toast.makeText(this, "로그인 오류: ${it.message}", Toast.LENGTH_SHORT).show()
-            }
         }
     }
+
 
 
     fun setRegisterPage() {
         setContentView(R.layout.registration)
 
-        var username: EditText = findViewById(R.id.username)
-        var email: EditText = findViewById(R.id.email)
-        var password: EditText = findViewById(R.id.password)
-        var password_confirm: EditText = findViewById(R.id.password_confirm)
-        var registerButton: Button = findViewById(R.id.register)
+        val username: EditText = findViewById(R.id.username)
+        val email: EditText = findViewById(R.id.email)
+        val password: EditText = findViewById(R.id.password)
+        val passwordConfirm: EditText = findViewById(R.id.password_confirm)
+        val registerButton: Button = findViewById(R.id.register)
+        val btn_back : ImageView = findViewById(R.id.btn_back)
+
+        btn_back.setOnClickListener{
+            setLoginPage()
+        }
 
         registerButton.setOnClickListener {
             val usernameText = username.text.toString().trim()
             val emailText = email.text.toString().trim()
             val passwordText = password.text.toString().trim()
-            val passwordConfirmText = password_confirm.text.toString().trim()
+            val passwordConfirmText = passwordConfirm.text.toString().trim()
 
             if (usernameText.isEmpty() || emailText.isEmpty() || passwordText.isEmpty() || passwordConfirmText.isEmpty()) {
                 Toast.makeText(this, "모든 항목을 입력해주세요.", Toast.LENGTH_SHORT).show()
@@ -102,18 +171,44 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val user = User(usernameText, emailText, passwordText, "active")
+            FirebaseAuth.getInstance()
+                .createUserWithEmailAndPassword(emailText, passwordText)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-            val database = FirebaseDatabase.getInstance()
-            val ref = database.getReference("MUSICAI/users").push()
-            ref.setValue(user)
-                .addOnSuccessListener {
-                    Toast.makeText(this, "이제 회원가입을 완료했어요!", Toast.LENGTH_SHORT).show()
-                    setMainPage()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "오류: ${it.message}", Toast.LENGTH_SHORT).show()
+                        val hashedPassword = hashPassword(passwordText)
+                        val user = User(usernameText, emailText, hashedPassword, "active")
+
+                        FirebaseDatabase.getInstance()
+                            .getReference("MUSICAI/users")
+                            .child(userId!!)
+                            .setValue(user)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "회원가입이 완료되었습니다!", Toast.LENGTH_SHORT).show()
+                                setMainPage()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, "데이터 저장 오류: ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    } else {
+                        Toast.makeText(this, "회원가입 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
         }
     }
+
+    fun logout() {
+        username = ""
+        loggedinUser = null
+        Toast.makeText(this, "로그아웃 되었습니다.", Toast.LENGTH_SHORT).show()
+        setMainPage()
+    }
+
+    fun hashPassword(password: String): String {
+        val bytes = password.toByteArray()
+        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
 }
