@@ -1,3 +1,40 @@
 <resources>
-    <string name="app_name">MUSICAI</string>
+    <string name="app_name" translatable="false">MUSICAI</string>
+<!--    splash screen    -->
+    <string name="slogan"><b>나의 리듬을</b> 찾는 시간</string>
+<!--    onboarding screen-->
+    <string name="signin">이미 회원이신가요?  로그인</string>
+<!--    login screen    -->
+    <string name="signin_title">뮤직 AI에\n오신것을\n환영합니다.</string>
+    <string name="forgotpassword">비밀번호를 잊으셨나요?</string>
+    <string name="signup">아직 뮤직 AI의 회원이 아니신가요?  회원가입</string>
+<!--    result message screen    -->
+    <string name="signup_success_title">가입을 축하드려요! \n이제 뮤직 AI와 \n함께해요 :)</string>
+    <string name="reset_success_title">비밀번호가 \n성공적으로 \n변경되었어요!</string>
+<!--    signup screen-->
+    <string name="signup_sub">처음 오셨군요?</string>
+    <string name="signup_title">가입하고 시작해요!</string>
+    <string name="static_name">닉네임</string>
+    <string name="static_email">이메일</string>
+    <string name="static_pw">비밀번호</string>
+    <string name="static_repw">비밀번호 재확인</string>
+    <string name="hint_name">닉네임을 입력해 주세요</string>
+    <string name="hint_email">이메일을 입력해 주세요</string>
+    <string name="hint_pw">비밀번호를 입력해 주세요</string>
+    <string name="hint_repw">비밀번호를 한 번 더 입력해주세요</string>
+    <string name="error_name">이 닉네임은 이미 있어요! 다른 걸로 해볼까요?</string>
+    <string name="error_email">이 이메일은 이미 사용 중이에요. 혹시 잊으셨다면? 이메일 찾기</string>
+    <string name="error_pw">비밀번호가 너무 짧습니다. 최소 8자 이상이어야 합니다.</string>
+    <string name="error_repw">비밀번호가 서로 달라요! 다시 입력해 주세요.</string>
+<!--    button message  -->
+    <string name="back_to_login">로그인하러 가기</string>
+    <string name="login">로그인하기</string>
+    <string name="start">시작하기</string>
+    <string name="next">다음</string>
+    <string name="link">이메일로 링크 받을께요</string>
+<!--    desc    -->
+    <string name="desc_back_to_login">로그인 화면으로 돌아가기</string>
+    <string name="desc_logo">뮤직 AI에 어서오세요</string>
+
+
 </resources>

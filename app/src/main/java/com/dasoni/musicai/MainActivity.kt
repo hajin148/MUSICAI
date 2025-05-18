@@ -1,16 +1,16 @@
 package com.dasoni.musicai
 
+import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.util.Patterns
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.core.view.isVisible
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import java.security.MessageDigest
@@ -25,18 +25,10 @@ class MainActivity : AppCompatActivity() {
     }
     fun setMainPage() {
         setContentView(R.layout.activity_main)
-        var register_btn : Button = findViewById(R.id.Register_btn)
-        register_btn.setOnClickListener{
-            setRegisterPage()
-        }
+
         var login_btn : Button = findViewById(R.id.Login_btn)
         login_btn.setOnClickListener {
             setLoginPage()
-        }
-
-        var password_reset : Button = findViewById(R.id.Password_reset_btn)
-        password_reset.setOnClickListener {
-            setPasswordResetPage()
         }
 
         var username_display : TextView = findViewById(R.id.username_display)
@@ -80,7 +72,11 @@ class MainActivity : AppCompatActivity() {
                 }
         }
         linkTime.setOnClickListener {
-            setMainPage()
+            setContentView(R.layout.result_message_screen)
+            val btn_back : ImageView = findViewById(R.id.btn_back)
+            btn_back.setOnClickListener{
+                setLoginPage()
+            }
         }
     }
 
@@ -89,9 +85,19 @@ class MainActivity : AppCompatActivity() {
     fun setLoginPage() {
         setContentView(R.layout.login)
 
-        val email: EditText = findViewById(R.id.login_email)
-        val password: EditText = findViewById(R.id.login_password)
-        val loginBtn: Button = findViewById(R.id.login_btn)
+        val email: EditText = findViewById(R.id.input_email)
+        val password: EditText = findViewById(R.id.password)
+        val loginBtn: Button = findViewById(R.id.button_sign_in)
+        val forgetpassword: TextView = findViewById(R.id.link_forgot_pw)
+        val register: TextView = findViewById(R.id.link_signup)
+
+        register.setOnClickListener {
+            setRegisterPage()
+        }
+
+        forgetpassword.setOnClickListener {
+            setPasswordResetPage()
+        }
 
         loginBtn.setOnClickListener {
             val emailText = email.text.toString().trim()
@@ -143,6 +149,11 @@ class MainActivity : AppCompatActivity() {
         val password: EditText = findViewById(R.id.password)
         val passwordConfirm: EditText = findViewById(R.id.password_confirm)
         val registerButton: Button = findViewById(R.id.register)
+        val btn_back : ImageView = findViewById(R.id.btn_back)
+
+        btn_back.setOnClickListener{
+            setLoginPage()
+        }
 
         registerButton.setOnClickListener {
             val usernameText = username.text.toString().trim()
