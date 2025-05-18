@@ -4,6 +4,10 @@ import android.content.Intent
 import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.util.Patterns
 import android.view.View
 import android.widget.Button
@@ -12,8 +16,10 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import org.w3c.dom.Text
 import java.security.MessageDigest
 
 class MainActivity : AppCompatActivity() {
@@ -98,6 +104,66 @@ class MainActivity : AppCompatActivity() {
         val forgetpassword: TextView = findViewById(R.id.link_forgot_pw)
         val register: TextView = findViewById(R.id.link_signup)
 
+        // ----------------------------------------- Underline --------------------------------------------------------
+        val fp_text = getString(R.string.forgotpassword)
+        val spannable_ul2 = SpannableString(fp_text)
+
+        spannable_ul2.setSpan(
+            UnderlineSpan(),
+            0,
+            fp_text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        forgetpassword.text = spannable_ul2
+        // ----------------------------------------- Underline --------------------------------------------------------
+        // ----------------------------------------- Underline --------------------------------------------------------
+
+        val text = getString(R.string.signup)
+        val spannable_ul = SpannableString(text)
+
+        spannable_ul.setSpan(
+            UnderlineSpan(),
+            21,
+            text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        register.text = spannable_ul
+        // ----------------------------------------- Underline --------------------------------------------------------
+        // ------------------------------------------------------------ Color Change -------------------------------------------------------
+        val mainText: TextView = findViewById(R.id.main_text1)
+
+
+        val fullText = getString(R.string.signin_title)
+        var spannable = SpannableString(fullText)
+
+
+        val primaryColor = ContextCompat.getColor(this, R.color.primary)
+        val blackColor = ContextCompat.getColor(this, android.R.color.black)
+
+        val target = "에\n오신것을"
+        val startIndex = fullText.indexOf(target)
+        val endIndex = startIndex + target.length
+
+        spannable.setSpan(
+            ForegroundColorSpan(primaryColor),
+            0,
+            fullText.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        if (startIndex >= 0) {
+            spannable.setSpan(
+                ForegroundColorSpan(blackColor),
+                startIndex,
+                endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        mainText.text = spannable
+        // ------------------------------------------------------------ Color Change -------------------------------------------------------
+
         register.setOnClickListener {
             setRegisterPage()
         }
@@ -156,13 +222,39 @@ class MainActivity : AppCompatActivity() {
         val password: EditText = findViewById(R.id.password)
         val passwordConfirm: EditText = findViewById(R.id.password_confirm)
         val registerButton: Button = findViewById(R.id.register)
-        val btn_back : ImageView = findViewById(R.id.btn_back)
+        val btn_back: ImageView = findViewById(R.id.btn_back)
 
-        btn_back.setOnClickListener{
+        val password_unmatch: TextView = findViewById(R.id.static_error_repw)
+        val password_short: TextView = findViewById(R.id.static_error_pw)
+        val username_exists: TextView = findViewById(R.id.static_error_name)
+        val email_exists: TextView = findViewById(R.id.static_error_email)
+
+        val errorEmail: TextView = findViewById(R.id.static_error_email)
+
+        //-----------------------------Underline--------------------------
+        val text = getString(R.string.error_email)
+        val spannable = SpannableString(text)
+
+        spannable.setSpan(
+            UnderlineSpan(),
+            29,
+            text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        errorEmail.text = spannable
+
+        btn_back.setOnClickListener {
             setLoginPage()
         }
+        //-----------------------------Underline--------------------------
 
         registerButton.setOnClickListener {
+            password_unmatch.visibility = View.GONE
+            password_short.visibility = View.GONE
+            username_exists.visibility = View.GONE
+            email_exists.visibility = View.GONE
+
             val usernameText = username.text.toString().trim()
             val emailText = email.text.toString().trim()
             val passwordText = password.text.toString().trim()
@@ -173,37 +265,75 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (passwordText != passwordConfirmText) {
-                Toast.makeText(this, "비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            var hasError = false
+
+            if (passwordText.length < 8) {
+                password_short.visibility = View.VISIBLE
+                hasError = true
             }
 
-            FirebaseAuth.getInstance()
-                .createUserWithEmailAndPassword(emailText, passwordText)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        val userId = FirebaseAuth.getInstance().currentUser?.uid
+            if (passwordText != passwordConfirmText) {
+                password_unmatch.visibility = View.VISIBLE
+                hasError = true
+            }
 
-                        val hashedPassword = hashPassword(passwordText)
-                        val user = User(usernameText, emailText, hashedPassword, "active")
+            if (hasError) return@setOnClickListener
 
-                        FirebaseDatabase.getInstance()
-                            .getReference("MUSICAI/users")
-                            .child(userId!!)
-                            .setValue(user)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "회원가입이 완료되었습니다!", Toast.LENGTH_SHORT).show()
-                                setMainPage()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(this, "데이터 저장 오류: ${it.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(this, "회원가입 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+            val usersRef = FirebaseDatabase.getInstance().getReference("MUSICAI/users")
+            usersRef.get().addOnSuccessListener { snapshot ->
+                var usernameTaken = false
+                var emailTaken = false
+
+                for (userSnapshot in snapshot.children) {
+                    val userEmail = userSnapshot.child("email").value?.toString()
+                    val userName = userSnapshot.child("username").value?.toString()
+
+                    if (userName == usernameText) {
+                        usernameTaken = true
+                    }
+                    if (userEmail == emailText) {
+                        emailTaken = true
                     }
                 }
+
+                if (usernameTaken) {
+                    username_exists.visibility = View.VISIBLE
+                }
+
+                if (emailTaken) {
+                    email_exists.visibility = View.VISIBLE
+                }
+
+                if (usernameTaken || emailTaken) return@addOnSuccessListener
+
+                FirebaseAuth.getInstance()
+                    .createUserWithEmailAndPassword(emailText, passwordText)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnCompleteListener
+                            val hashedPassword = hashPassword(passwordText)
+                            val user = User(usernameText, emailText, hashedPassword, "active")
+
+                            usersRef.child(userId)
+                                .setValue(user)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "회원가입이 완료되었습니다!", Toast.LENGTH_SHORT).show()
+                                    setMainPage()
+                                }
+                                .addOnFailureListener {
+                                    Toast.makeText(this, "데이터 저장 오류: ${it.message}", Toast.LENGTH_SHORT).show()
+                                }
+                        } else {
+                            Toast.makeText(this, "회원가입 실패: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+            }.addOnFailureListener {
+                Toast.makeText(this, "유저 데이터 확인 실패: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
+
 
     fun logout() {
         username = ""
