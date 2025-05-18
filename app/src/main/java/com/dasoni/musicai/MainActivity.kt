@@ -4,6 +4,10 @@ import android.content.Intent
 import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.text.style.UnderlineSpan
 import android.util.Patterns
 import android.view.View
 import android.widget.Button
@@ -12,6 +16,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import org.w3c.dom.Text
@@ -99,6 +104,66 @@ class MainActivity : AppCompatActivity() {
         val forgetpassword: TextView = findViewById(R.id.link_forgot_pw)
         val register: TextView = findViewById(R.id.link_signup)
 
+        // ----------------------------------------- Underline --------------------------------------------------------
+        val fp_text = getString(R.string.forgotpassword)
+        val spannable_ul2 = SpannableString(fp_text)
+
+        spannable_ul2.setSpan(
+            UnderlineSpan(),
+            0,
+            fp_text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        forgetpassword.text = spannable_ul2
+        // ----------------------------------------- Underline --------------------------------------------------------
+        // ----------------------------------------- Underline --------------------------------------------------------
+
+        val text = getString(R.string.signup)
+        val spannable_ul = SpannableString(text)
+
+        spannable_ul.setSpan(
+            UnderlineSpan(),
+            21,
+            text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        register.text = spannable_ul
+        // ----------------------------------------- Underline --------------------------------------------------------
+        // ------------------------------------------------------------ Color Change -------------------------------------------------------
+        val mainText: TextView = findViewById(R.id.main_text1)
+
+
+        val fullText = getString(R.string.signin_title)
+        var spannable = SpannableString(fullText)
+
+
+        val primaryColor = ContextCompat.getColor(this, R.color.primary)
+        val blackColor = ContextCompat.getColor(this, android.R.color.black)
+
+        val target = "에\n오신것을"
+        val startIndex = fullText.indexOf(target)
+        val endIndex = startIndex + target.length
+
+        spannable.setSpan(
+            ForegroundColorSpan(primaryColor),
+            0,
+            fullText.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        if (startIndex >= 0) {
+            spannable.setSpan(
+                ForegroundColorSpan(blackColor),
+                startIndex,
+                endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+
+        mainText.text = spannable
+        // ------------------------------------------------------------ Color Change -------------------------------------------------------
+
         register.setOnClickListener {
             setRegisterPage()
         }
@@ -164,9 +229,25 @@ class MainActivity : AppCompatActivity() {
         val username_exists: TextView = findViewById(R.id.static_error_name)
         val email_exists: TextView = findViewById(R.id.static_error_email)
 
+        val errorEmail: TextView = findViewById(R.id.static_error_email)
+
+        //-----------------------------Underline--------------------------
+        val text = getString(R.string.error_email)
+        val spannable = SpannableString(text)
+
+        spannable.setSpan(
+            UnderlineSpan(),
+            29,
+            text.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+
+        errorEmail.text = spannable
+
         btn_back.setOnClickListener {
             setLoginPage()
         }
+        //-----------------------------Underline--------------------------
 
         registerButton.setOnClickListener {
             password_unmatch.visibility = View.GONE
