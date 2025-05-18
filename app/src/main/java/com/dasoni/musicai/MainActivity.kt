@@ -1,5 +1,6 @@
 package com.dasoni.musicai
 
+import android.content.Intent
 import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -29,6 +30,12 @@ class MainActivity : AppCompatActivity() {
         var login_btn : Button = findViewById(R.id.Login_btn)
         login_btn.setOnClickListener {
             setLoginPage()
+        }
+
+        var soundTest_btn : Button = findViewById(R.id.soundTest_btn)
+        soundTest_btn.setOnClickListener {
+            val intent = Intent(this, SoundActivity::class.java)
+            startActivity(intent)
         }
 
         var username_display : TextView = findViewById(R.id.username_display)

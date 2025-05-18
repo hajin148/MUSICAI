@@ -25,6 +25,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
+    <Button
+        android:id="@+id/soundTest_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SoundTest"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Login_btn"
+        app:layout_constraintVertical_bias="0.745" />
+
     <TextView
         android:id="@+id/username_display"
         android:layout_width="wrap_content"
