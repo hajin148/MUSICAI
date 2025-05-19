@@ -12,6 +12,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlin.math.absoluteValue
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 
 class SoundActivity : AppCompatActivity() {
 
@@ -24,6 +25,7 @@ class SoundActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(R.layout.detect_sound)
 
         statusText = findViewById(R.id.soundStatus)
