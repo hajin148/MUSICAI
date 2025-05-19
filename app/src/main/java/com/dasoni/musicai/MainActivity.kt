@@ -49,6 +49,14 @@ class MainActivity : AppCompatActivity() {
         if (username != "") {
             username_display.text = username + "님, 안녕하세요!" + loggedinUser.toString()
         }
+
+        if (loggedinUser != null) {
+            login_btn.text = "Logout"
+            login_btn.setOnClickListener {
+                login_btn.text = "Login"
+                logout();
+            }
+        }
     }
 
     fun setPasswordResetPage() {
