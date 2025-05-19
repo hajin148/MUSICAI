@@ -55,13 +55,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.password_reset)
 
         val auth = FirebaseAuth.getInstance()
-        val back: ImageButton = findViewById(R.id.backButton)
+        val back: ImageView = findViewById(R.id.backButton)
         back.setOnClickListener {
-            setMainPage()
+            setLoginPage()
         }
 
-        val sendEmail: Button = findViewById(R.id.Link)
-        val linkTime: Button = findViewById(R.id.link_time)
+        val sendEmail: Button = findViewById(R.id.link)
+//        val linkTime: Button = findViewById(R.id.link_time)
         val userEmail: EditText = findViewById(R.id.user_email)
 
         sendEmail.setOnClickListener {
@@ -76,21 +76,30 @@ class MainActivity : AppCompatActivity() {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         Toast.makeText(this, "비밀번호 재설정 이메일이 전송되었습니다.", Toast.LENGTH_LONG).show()
-                        linkTime.visibility = View.VISIBLE
                         sendEmail.visibility = View.VISIBLE
-
+                        setContentView(R.layout.result_message_screen)
+                        val back_btn : ImageView = findViewById(R.id.btn_back)
+                        back_btn.setOnClickListener {
+                            setLoginPage()
+                        }
+                        val textmessage : TextView = findViewById(R.id.text_result_message)
+                        textmessage.text = "비밀번호 변경\n이메일을\n확인해주세요!"
+                        val textLogin : TextView = findViewById(R.id.text_login)
+                        textLogin.setOnClickListener {
+                            setLoginPage()
+                        }
                     } else {
                         Toast.makeText(this, "이메일 전송 실패: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                     }
                 }
         }
-        linkTime.setOnClickListener {
-            setContentView(R.layout.result_message_screen)
-            val btn_back : ImageView = findViewById(R.id.btn_back)
-            btn_back.setOnClickListener{
-                setLoginPage()
-            }
-        }
+//        linkTime.setOnClickListener {
+//            setContentView(R.layout.result_message_screen)
+//            val btn_back : ImageView = findViewById(R.id.btn_back)
+//            btn_back.setOnClickListener{
+//                setLoginPage()
+//            }
+//        }
     }
 
 
@@ -232,21 +241,21 @@ class MainActivity : AppCompatActivity() {
         val errorEmail: TextView = findViewById(R.id.static_error_email)
 
         //-----------------------------Underline--------------------------
-        val text = getString(R.string.error_email)
-        val spannable = SpannableString(text)
-
-        spannable.setSpan(
-            UnderlineSpan(),
-            29,
-            text.length,
-            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-        )
-
-        errorEmail.text = spannable
-
-        btn_back.setOnClickListener {
-            setLoginPage()
-        }
+//        val text = getString(R.string.error_email)
+//        val spannable = SpannableString(text)
+//
+//        spannable.setSpan(
+//            UnderlineSpan(),
+//            29,
+//            text.length,
+//            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+//        )
+//
+//        errorEmail.text = spannable
+//
+//        btn_back.setOnClickListener {
+//            setLoginPage()
+//        }
         //-----------------------------Underline--------------------------
 
         registerButton.setOnClickListener {
@@ -318,7 +327,17 @@ class MainActivity : AppCompatActivity() {
                                 .setValue(user)
                                 .addOnSuccessListener {
                                     Toast.makeText(this, "회원가입이 완료되었습니다!", Toast.LENGTH_SHORT).show()
-                                    setMainPage()
+                                    setContentView(R.layout.result_message_screen)
+                                    val textMessage : TextView = findViewById(R.id.text_result_message)
+                                    textMessage.text = "가입을 축하드려요!\n이제 뮤직 AI와\n함께해요 :)"
+                                    val loginBtn : TextView = findViewById(R.id.text_login)
+                                    loginBtn.setOnClickListener {
+                                        setLoginPage()
+                                    }
+                                    val backBtn : ImageView = findViewById(R.id.btn_back)
+                                    backBtn.setOnClickListener{
+                                        setLoginPage()
+                                    }
                                 }
                                 .addOnFailureListener {
                                     Toast.makeText(this, "데이터 저장 오류: ${it.message}", Toast.LENGTH_SHORT).show()
