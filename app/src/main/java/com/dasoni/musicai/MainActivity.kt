@@ -253,9 +253,9 @@ class MainActivity : AppCompatActivity() {
 //
 //        errorEmail.text = spannable
 //
-//        btn_back.setOnClickListener {
-//            setLoginPage()
-//        }
+        btn_back.setOnClickListener {
+            setLoginPage()
+        }
         //-----------------------------Underline--------------------------
 
         registerButton.setOnClickListener {
