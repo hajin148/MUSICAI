@@ -3,6 +3,8 @@
     <style name="Base.Theme.MUSICAI" parent="Theme.MaterialComponents.DayNight.NoActionBar">
     <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
         <item name="colorControlActivated">@color/primary</item>
     </style>
 

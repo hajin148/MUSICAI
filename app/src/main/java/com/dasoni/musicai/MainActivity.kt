@@ -4,6 +4,8 @@ import android.content.Intent
 import android.media.Image
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -25,10 +27,15 @@ import java.security.MessageDigest
 class MainActivity : AppCompatActivity() {
     var username = ""
     var loggedinUser : User? = null
+    private companion object {
+        const val SPLASH_TIME_OUT: Long = 2000
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setMainPage()
+        setContentView(R.layout.splash)
+        Handler(Looper.getMainLooper()).postDelayed({ setMainPage() }, SPLASH_TIME_OUT)
+
     }
     fun setMainPage() {
         setContentView(R.layout.activity_main)
