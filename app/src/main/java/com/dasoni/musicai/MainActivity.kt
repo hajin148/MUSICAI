@@ -261,10 +261,10 @@ class MainActivity : AppCompatActivity() {
 //
 //        errorEmail.text = spannable
 //
+        //-----------------------------Underline--------------------------
         btn_back.setOnClickListener {
             setLoginPage()
         }
-        //-----------------------------Underline--------------------------
 
         registerButton.setOnClickListener {
             password_unmatch.visibility = View.GONE

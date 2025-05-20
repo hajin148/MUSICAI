@@ -113,7 +113,7 @@ class SoundActivity : AppCompatActivity() {
 
     private fun stopListening() {
         isListening = false
-        audioThread?.join(100) // wait for the thread to stop
+        audioThread?.join(100)
 
         audioRecord?.apply {
             if (recordingState == AudioRecord.RECORDSTATE_RECORDING) {
