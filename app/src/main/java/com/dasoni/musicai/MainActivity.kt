@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
 
         var soundTest_btn : Button = findViewById(R.id.soundTest_btn)
         soundTest_btn.setOnClickListener {
-            val intent = Intent(this, SoundActivity::class.java)
+            val intent = Intent(this, BeatAnalyzeActivity::class.java)
             startActivity(intent)
         }
 
