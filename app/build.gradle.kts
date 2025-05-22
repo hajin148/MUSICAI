@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dasoni.musicai"
-        minSdk = 34
+        minSdk = 31
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -34,8 +34,9 @@ android {
         jvmTarget = "1.8"
     }
 }
-
 dependencies {
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
