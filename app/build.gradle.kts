@@ -7,6 +7,9 @@ plugins {
 android {
     namespace = "com.dasoni.musicai"
     compileSdk = 34
+    defaultConfig {
+        multiDexEnabled = true
+    }
 
     defaultConfig {
         applicationId = "com.dasoni.musicai"
@@ -36,6 +39,8 @@ android {
 }
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("org.json:json:20240303")
 
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")

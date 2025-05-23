@@ -1,152 +1,110 @@
 package com.dasoni.musicai
 
-import android.media.*
+import android.content.Intent
+import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Button
+import android.widget.Toast
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.Response
+import org.json.JSONObject
 import java.io.File
-import java.nio.ByteBuffer
-import kotlin.math.log10
+import java.io.FileOutputStream
+import java.io.IOException
 
 class BeatAnalyzeActivity : AppCompatActivity() {
 
+    private val PICK_AUDIO_REQUEST = 1001
+    private lateinit var beatList: ArrayList<Long>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val audioFile = copyAssetToInternalStorage("1.wav")
-        val pcmBytes = decodeWavWithMediaExtractor(audioFile.absolutePath)
-        val beats = estimateBeats(pcmBytes, 44100)
-        Log.d("BeatEstimation", "Detected beat times (s): $beats")
-    }
+        setContentView(R.layout.activity_beat_analyze)
 
-    private fun copyAssetToInternalStorage(fileName: String): File {
-        val outFile = File(filesDir, fileName)
-        if (!outFile.exists()) {
-            assets.open(fileName).use { input -> outFile.outputStream().use { output -> input.copyTo(output) } }
+        val pickButton = findViewById<Button>(R.id.btnPickAudio)
+        pickButton.setOnClickListener {
+            pickAudioFile()
         }
-        return outFile
     }
 
-    private fun decodeWavWithMediaExtractor(filePath: String): ByteArray {
-        val extractor = MediaExtractor()
-        extractor.setDataSource(filePath)
+    private fun pickAudioFile() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "audio/*"
+        startActivityForResult(intent, PICK_AUDIO_REQUEST)
+    }
 
-        var audioTrackIndex = -1
-        for (i in 0 until extractor.trackCount) {
-            val format = extractor.getTrackFormat(i)
-            if (format.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
-                audioTrackIndex = i
-                break
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == PICK_AUDIO_REQUEST && resultCode == RESULT_OK && data != null) {
+            val uri = data.data
+            uri?.let {
+                sendFileToServer(it)
             }
         }
-        if (audioTrackIndex == -1) throw IllegalStateException("No audio track found")
+    }
 
-        extractor.selectTrack(audioTrackIndex)
-        val format = extractor.getTrackFormat(audioTrackIndex)
-        val codec = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME)!!)
-        codec.configure(format, null, null, 0)
-        codec.start()
+    private fun sendFileToServer(uri: Uri) {
+        val contentResolver = contentResolver
+        val inputStream = contentResolver.openInputStream(uri)
+        val file = File(cacheDir, "selected_audio.wav") // 혹은 .mp3
+        val outputStream = FileOutputStream(file)
+        inputStream?.copyTo(outputStream)
+        inputStream?.close()
+        outputStream.close()
 
-        val inputBuffers = codec.inputBuffers
-        val outputBuffers = codec.outputBuffers
-        val bufferInfo = MediaCodec.BufferInfo()
-        val pcmData = mutableListOf<Byte>()
+        val client = OkHttpClient()
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart(
+                "file",
+                file.name,
+                file.asRequestBody("audio/wav".toMediaTypeOrNull())
+            )
+            .build()
 
-        var isEOS = false
-        while (true) {
-            if (!isEOS) {
-                val inIndex = codec.dequeueInputBuffer(10000)
-                if (inIndex >= 0) {
-                    val buffer = inputBuffers[inIndex]
-                    val sampleSize = extractor.readSampleData(buffer, 0)
-                    if (sampleSize < 0) {
-                        codec.queueInputBuffer(inIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                        isEOS = true
-                    } else {
-                        codec.queueInputBuffer(inIndex, 0, sampleSize, extractor.sampleTime, 0)
-                        extractor.advance()
-                    }
+        val request = Request.Builder()
+            .url("https://beat-analyzer-production.up.railway.app/analyze")
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                runOnUiThread {
+                    Toast.makeText(this@BeatAnalyzeActivity, "업로드 실패: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            val outIndex = codec.dequeueOutputBuffer(bufferInfo, 10000)
-            if (outIndex >= 0) {
-                val outBuffer: ByteBuffer = outputBuffers[outIndex]
-                val bytes = ByteArray(bufferInfo.size)
-                outBuffer.get(bytes)
-                outBuffer.clear()
-                pcmData.addAll(bytes.toList())
-                codec.releaseOutputBuffer(outIndex, false)
-            } else if (outIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                break
+            override fun onResponse(call: Call, response: Response) {
+                val responseBody = response.body?.string()
+                beatList = ArrayList()
+
+                try {
+                    val json = JSONObject(responseBody)
+                    val jsonArray = json.getJSONArray("beat_times_ms")
+                    for (i in 0 until jsonArray.length()) {
+                        beatList.add(jsonArray.getLong(i))
+                    }
+
+                    runOnUiThread {
+                        Toast.makeText(this@BeatAnalyzeActivity, "받은 비트: ${beatList.size}개", Toast.LENGTH_SHORT).show()
+                        Log.d("BeatList", beatList.toString())
+                    }
+
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        Toast.makeText(this@BeatAnalyzeActivity, "응답 파싱 오류", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break
-        }
-
-        codec.stop()
-        codec.release()
-        extractor.release()
-
-        return pcmData.toByteArray()
+        })
     }
-
-    private fun estimateBeats(pcmBytes: ByteArray, sampleRate: Int): List<Float> {
-        val beatTimes = mutableListOf<Float>()
-        val samples = ByteBuffer.wrap(pcmBytes).asShortBuffer()
-
-        val channelCount = 2
-        val rawSamples = ShortArray(samples.limit())
-        samples.get(rawSamples)
-
-        val audioData = ShortArray(rawSamples.size / channelCount)
-        for (i in audioData.indices) {
-            val left = rawSamples[i * 2]
-            val right = rawSamples[i * 2 + 1]
-            audioData[i] = ((left + right) / 2).toShort()
-        }
-
-        val frameSize = 1024
-        val hopSize = 512
-        val numFrames = (audioData.size - frameSize) / hopSize
-
-        val energies = DoubleArray(numFrames) { i ->
-            var energy = 0.0
-            for (j in 0 until frameSize) {
-                val sample = audioData[i * hopSize + j].toDouble()
-                energy += sample * sample
-            }
-            energy
-        }
-
-        val logEnergies = energies.map { 10 * log10(it + 1e-6) }
-        val minEnergy = logEnergies.minOrNull() ?: 0.0
-        val maxEnergy = logEnergies.maxOrNull() ?: 1.0
-        val normEnergies = logEnergies.map { (it - minEnergy) / (maxEnergy - minEnergy) }
-
-        val smoothed = normEnergies.toMutableList()
-        for (i in 2 until normEnergies.size - 2) {
-            val window = normEnergies.subList(i - 2, i + 3).sorted()
-            smoothed[i] = window[2]
-        }
-
-        val minInterval = (0.7f * sampleRate / hopSize).toInt()
-        var lastPeak = -minInterval
-        val threshold = 0.35
-        val timeZeroCorrection = -0.3f  // 필요 시 보정값 유지
-
-        for (i in 1 until smoothed.size - 1) {
-            if (smoothed[i] > threshold &&
-                smoothed[i] > smoothed[i - 1] &&
-                smoothed[i] > smoothed[i + 1] &&
-                (i - lastPeak) >= minInterval
-            ) {
-                val timeSec = (i * hopSize.toFloat() / sampleRate) + timeZeroCorrection
-                beatTimes.add(timeSec)
-                lastPeak = i
-            }
-        }
-
-        return beatTimes
-    }
-
 }
