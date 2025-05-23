@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.Toast
 import okhttp3.Call
 import okhttp3.Callback
@@ -97,7 +98,12 @@ class BeatAnalyzeActivity : AppCompatActivity() {
                     runOnUiThread {
                         Toast.makeText(this@BeatAnalyzeActivity, "받은 비트: ${beatList.size}개", Toast.LENGTH_SHORT).show()
                         Log.d("BeatList", beatList.toString())
+
+                        val container = findViewById<FrameLayout>(R.id.visualizer_container)
+                        container.removeAllViews()
+                        container.addView(BeatVisualizerView(this@BeatAnalyzeActivity, beatList))
                     }
+
 
                 } catch (e: Exception) {
                     runOnUiThread {

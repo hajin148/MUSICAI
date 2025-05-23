@@ -17,8 +17,14 @@
         android:theme="@style/Theme.MUSICAI"
         tools:targetApi="31">
         <activity
+            android:name=".BeatVisualizerView"
+            android:exported="false"
+            android:label="@string/title_activity_beat_visualizer_view"
+            android:theme="@style/Theme.MUSICAI" />
+        <activity
             android:name=".BeatAnalyzeActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="landscape" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
