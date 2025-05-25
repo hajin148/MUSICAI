@@ -1,18 +1,25 @@
 package com.dasoni.musicai
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Bundle
+import android.util.Log
+import android.view.MotionEvent
+import android.view.View
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import kotlin.math.absoluteValue
-import android.util.Log
-import androidx.appcompat.app.AppCompatDelegate
 
 class SoundActivity : AppCompatActivity() {
 
@@ -22,6 +29,12 @@ class SoundActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private var lastDetectedTime = 0L
     private val cooldownMs = 80
+    private lateinit var playView: View
+    private lateinit var markHit: () -> Unit
+    private val hitCircles = mutableListOf<Float>()
+    private var barX = 0f
+    private val duration = 4000L
+    private var startTime = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +42,62 @@ class SoundActivity : AppCompatActivity() {
         setContentView(R.layout.detect_sound)
 
         statusText = findViewById(R.id.soundStatus)
+        val container = findViewById<FrameLayout>(R.id.container)
+        playView = object : View(this) {
+            private val barPaint = Paint().apply {
+                color = Color.RED
+                strokeWidth = 6f
+            }
+            private val circlePaint = Paint().apply {
+                color = Color.BLACK
+            }
+
+            private val frameRate = 60
+            private var lastElapsed = 0L
+
+            private val animationLoop = object : Runnable {
+                override fun run() {
+                    val elapsed = (System.currentTimeMillis() - startTime) % duration
+
+                    if (elapsed < lastElapsed) {
+                        hitCircles.clear()
+                    }
+                    lastElapsed = elapsed
+
+                    barX = (elapsed.toFloat() / duration) * width
+                    invalidate()
+                    postDelayed(this, 1000L / frameRate)
+                }
+            }
+
+            init {
+                markHit = { markHit() }
+                post(animationLoop)
+            }
+
+            fun markHit() {
+                hitCircles.add(barX)
+                invalidate()
+            }
+
+            override fun onDraw(canvas: Canvas) {
+                super.onDraw(canvas)
+                canvas.drawLine(barX, 0f, barX, height.toFloat(), barPaint)
+                hitCircles.forEach {
+                    canvas.drawCircle(it, height / 2f, 20f, circlePaint)
+                }
+            }
+
+            override fun onTouchEvent(event: MotionEvent): Boolean {
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    hitCircles.add(barX)
+                    invalidate()
+                    return true
+                }
+                return super.onTouchEvent(event)
+            }
+        }
+        container.addView(playView)
 
         // get microphone permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -89,19 +158,15 @@ class SoundActivity : AppCompatActivity() {
                         val peak = buffer.maxOf { it.toInt().absoluteValue }
                         val avg = buffer.map { it.toInt().absoluteValue }.average()
                         val now = System.currentTimeMillis()
-                        if ((peak > 6000 || avg > 2500) && (now - lastDetectedTime > cooldownMs)) {
+                        if ((peak > 10000 || avg > 5000) && (now - lastDetectedTime > cooldownMs)) {
                             lastDetectedTime = now
                             runOnUiThread {
-                                statusText.text = "🔊"
                                 Log.d("Beat", "Detected at ${now}")
-                            }
-                        } else {
-                            runOnUiThread {
-                                statusText.text = "Listening..."
+                                markHit()
                             }
                         }
                     }
-                    Thread.sleep(30)
+                    Thread.sleep(5) // adjust latency
                 }
             } catch (e: Exception) {
                 Log.e("SoundDebug", "Thread crashed: ${e.message}", e)
