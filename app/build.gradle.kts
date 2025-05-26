@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dasoni.musicai"
-        minSdk = 29
+        minSdk = 32
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -53,7 +53,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth") // Uses version from BOM
     implementation("com.firebaseui:firebase-ui-auth:8.0.0") // Updated to a version compatible with AndroidX
 
-    implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")

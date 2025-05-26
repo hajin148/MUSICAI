@@ -18,6 +18,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         setContentView(R.layout.splash)
         Handler(Looper.getMainLooper()).postDelayed({ setMainPage() }, SPLASH_TIME_OUT)
 
@@ -43,6 +45,12 @@ class MainActivity : AppCompatActivity() {
         var login_btn : Button = findViewById(R.id.Login_btn)
         login_btn.setOnClickListener {
             setLoginPage()
+        }
+
+        var soundActivity_btn : Button = findViewById(R.id.soundActivity_btn)
+        soundActivity_btn.setOnClickListener {
+            val intent = Intent(this, SoundActivity::class.java)
+            startActivity(intent)
         }
 
         var soundTest_btn : Button = findViewById(R.id.soundTest_btn)

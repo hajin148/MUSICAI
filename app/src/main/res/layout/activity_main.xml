@@ -30,12 +30,22 @@
         android:id="@+id/soundTest_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SoundTest"
+        android:text="MakeMusic"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/Login_btn"
         app:layout_constraintVertical_bias="0.745" />
+
+    <Button
+        android:id="@+id/soundActivity_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SoundActivity"
+        app:layout_constraintBottom_toTopOf="@+id/soundTest_btn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Login_btn" />
 
     <TextView
         android:id="@+id/username_display"
