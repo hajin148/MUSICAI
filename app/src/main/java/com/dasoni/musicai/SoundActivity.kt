@@ -28,6 +28,7 @@ class SoundActivity : AppCompatActivity() {
     private var isListening = false
     private var audioRecord: AudioRecord? = null
     private lateinit var statusText: TextView
+    private lateinit var bpmView: TextView
     private var lastDetectedTime = 0L
     private val cooldownMs = 80
     private lateinit var playView: View
@@ -46,6 +47,7 @@ class SoundActivity : AppCompatActivity() {
         setContentView(R.layout.detect_sound)
 
         statusText = findViewById(R.id.soundStatus)
+        bpmView = findViewById(R.id.bpmView)
         val container = findViewById<FrameLayout>(R.id.container)
         playView = object : View(this) {
             private val barPaint = Paint().apply {
@@ -62,7 +64,6 @@ class SoundActivity : AppCompatActivity() {
             }
 
             private val frameRate = 60
-            private var lastElapsed = 0L
 
             private val animationLoop = object : Runnable {
                 override fun run() {
@@ -127,9 +128,12 @@ class SoundActivity : AppCompatActivity() {
             if (songIds.isNotEmpty()) {
                 val randomSongId = songIds.random()
                 val baseName = randomSongId.removePrefix("song_")
-                val timestampsRef = songsRef.child("$randomSongId/timestamps")
-                timestampsRef.get().addOnSuccessListener { tsSnap ->
-                    timestamps = tsSnap.children.mapNotNull { it.getValue(Long::class.java) }
+                val songRef = songsRef.child(randomSongId)
+                songRef.get().addOnSuccessListener { songSnap ->
+                    val bpm = songSnap.child("bpm").getValue(Int::class.java) ?: 0
+                    bpmView.text = "BPM: $bpm"
+                    val timestampsSnap = songSnap.child("timestamps")
+                    timestamps = timestampsSnap.children.mapNotNull { it.getValue(Long::class.java) }
                     setupTargetCircles(timestamps)
                     playAudioFromAssets(baseName)
                     Toast.makeText(this, "곡: $randomSongId", Toast.LENGTH_SHORT).show()
@@ -160,14 +164,12 @@ class SoundActivity : AppCompatActivity() {
         if (timestamps.size < 2) return 0f
         val margin = 24f
         val usableWidth = playView.width - 2 * margin
-
         val first = timestamps.first()
         val last = timestamps.last()
         val totalDuration = last - first
 
         val offsetMs = -250L
         val adjustedElapsed = (elapsed + offsetMs - first).coerceAtLeast(0)
-
         val progress = adjustedElapsed.toFloat() / totalDuration.coerceAtLeast(1)
         return margin + progress * usableWidth
     }
