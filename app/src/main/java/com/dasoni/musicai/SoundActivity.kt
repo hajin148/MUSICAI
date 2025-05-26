@@ -1,13 +1,13 @@
 package com.dasoni.musicai
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.media.AudioFormat
 import android.media.AudioRecord
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
@@ -15,14 +15,15 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.database.FirebaseDatabase
 import kotlin.math.absoluteValue
 
 class SoundActivity : AppCompatActivity() {
-
     private var audioThread: Thread? = null
     private var isListening = false
     private var audioRecord: AudioRecord? = null
@@ -32,9 +33,12 @@ class SoundActivity : AppCompatActivity() {
     private lateinit var playView: View
     private lateinit var markHit: () -> Unit
     private val hitCircles = mutableListOf<Float>()
+    private val targetCircles = mutableListOf<Float>()
     private var barX = 0f
-    private val duration = 4000L
-    private var startTime = System.currentTimeMillis()
+    private var targetReady = false
+    private var startTime = 0L
+    private var timestamps = listOf<Long>()
+    private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,8 +52,13 @@ class SoundActivity : AppCompatActivity() {
                 color = Color.RED
                 strokeWidth = 6f
             }
-            private val circlePaint = Paint().apply {
+            private val userPaint = Paint().apply {
                 color = Color.BLACK
+                isAntiAlias = true
+            }
+            private val targetPaint = Paint().apply {
+                color = Color.GRAY
+                isAntiAlias = true
             }
 
             private val frameRate = 60
@@ -57,14 +66,12 @@ class SoundActivity : AppCompatActivity() {
 
             private val animationLoop = object : Runnable {
                 override fun run() {
-                    val elapsed = (System.currentTimeMillis() - startTime) % duration
-
-                    if (elapsed < lastElapsed) {
-                        hitCircles.clear()
+                    if (!targetReady || timestamps.size < 2) {
+                        postDelayed(this, 1000L / frameRate)
+                        return
                     }
-                    lastElapsed = elapsed
-
-                    barX = (elapsed.toFloat() / duration) * width
+                    val elapsed = System.currentTimeMillis() - startTime
+                    barX = calculateBarX(elapsed)
                     invalidate()
                     postDelayed(this, 1000L / frameRate)
                 }
@@ -83,8 +90,11 @@ class SoundActivity : AppCompatActivity() {
             override fun onDraw(canvas: Canvas) {
                 super.onDraw(canvas)
                 canvas.drawLine(barX, 0f, barX, height.toFloat(), barPaint)
+                targetCircles.forEach {
+                    canvas.drawCircle(it, height / 3f, 16f, targetPaint)
+                }
                 hitCircles.forEach {
-                    canvas.drawCircle(it, height / 2f, 20f, circlePaint)
+                    canvas.drawCircle(it, 2 * height / 3f, 20f, userPaint)
                 }
             }
 
@@ -99,32 +109,94 @@ class SoundActivity : AppCompatActivity() {
         }
         container.addView(playView)
 
-        // get microphone permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), 1)
         } else {
             startListening()
         }
+
+        loadRandomSongFromFirebase()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        if (requestCode == 1 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            startListening()
-        } else {
-            statusText.text = "Permission denied"
+    private fun loadRandomSongFromFirebase() {
+        val db = FirebaseDatabase.getInstance()
+        val songsRef = db.getReference("MUSICAI/songs")
+
+        songsRef.get().addOnSuccessListener { snapshot ->
+            val songIds = snapshot.children.mapNotNull { it.key }
+            if (songIds.isNotEmpty()) {
+                val randomSongId = songIds.random()
+                val baseName = randomSongId.removePrefix("song_")
+                val timestampsRef = songsRef.child("$randomSongId/timestamps")
+                timestampsRef.get().addOnSuccessListener { tsSnap ->
+                    timestamps = tsSnap.children.mapNotNull { it.getValue(Long::class.java) }
+                    setupTargetCircles(timestamps)
+                    playAudioFromAssets(baseName)
+                    Toast.makeText(this, "곡: $randomSongId", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopListening()
+    private fun setupTargetCircles(timestamps: List<Long>) {
+        val viewWidth = playView.width.takeIf { it > 0 } ?: return
+        val margin = 24f
+        val usableWidth = viewWidth - (2 * margin)
+
+        targetCircles.clear()
+        val first = timestamps.first()
+        val last = timestamps.last()
+        val durationMs = last - first
+
+        timestamps.forEach { time ->
+            val progress = (time - first).toFloat() / durationMs
+            targetCircles.add(margin + progress * usableWidth)
+        }
+
+        playView.invalidate()
+    }
+
+    private fun calculateBarX(elapsed: Long): Float {
+        if (timestamps.size < 2) return 0f
+        val margin = 24f
+        val usableWidth = playView.width - 2 * margin
+
+        val first = timestamps.first()
+        val last = timestamps.last()
+        val totalDuration = last - first
+
+        val offsetMs = -250L
+        val adjustedElapsed = (elapsed + offsetMs - first).coerceAtLeast(0)
+
+        val progress = adjustedElapsed.toFloat() / totalDuration.coerceAtLeast(1)
+        return margin + progress * usableWidth
+    }
+
+    private fun playAudioFromAssets(baseName: String) {
+        val extensions = listOf(".wav", ".mp3")
+        for (ext in extensions) {
+            val fileName = "$baseName$ext"
+            try {
+                val afd = assets.openFd(fileName)
+                mediaPlayer = MediaPlayer().apply {
+                    setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+                    prepare()
+                    setOnPreparedListener {
+                        startTime = System.currentTimeMillis()
+                        targetReady = true
+                        start()
+                    }
+                }
+                return
+            } catch (e: Exception) {
+                Log.d("Audio", "파일 없음 또는 에러: $fileName")
+            }
+        }
+        Toast.makeText(this, "오디오 파일을 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
     }
 
     private fun startListening() {
         if (isListening) return
-
         isListening = true
 
         val bufferSize = AudioRecord.getMinBufferSize(
@@ -161,17 +233,17 @@ class SoundActivity : AppCompatActivity() {
                         if ((peak > 10000 || avg > 5000) && (now - lastDetectedTime > cooldownMs)) {
                             lastDetectedTime = now
                             runOnUiThread {
-                                Log.d("Beat", "Detected at ${now}")
+                                Log.d("Beat", "Detected at \${now}")
                                 markHit()
                             }
                         }
                     }
-                    Thread.sleep(5) // adjust latency
+                    Thread.sleep(5)
                 }
             } catch (e: Exception) {
-                Log.e("SoundDebug", "Thread crashed: ${e.message}", e)
+                Log.e("SoundDebug", "Thread crashed: \${e.message}", e)
                 runOnUiThread {
-                    statusText.text = "Error: ${e.message}"
+                    statusText.text = "Error: \${e.message}"
                 }
             }
         }
@@ -180,8 +252,7 @@ class SoundActivity : AppCompatActivity() {
 
     private fun stopListening() {
         isListening = false
-        audioThread?.join(100) // wait for the thread to stop
-
+        audioThread?.join(100)
         audioRecord?.apply {
             if (recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 stop()
@@ -191,8 +262,9 @@ class SoundActivity : AppCompatActivity() {
             Log.d("SoundDebug", "AudioRecord released")
         }
         audioRecord = null
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
-
 
     override fun onPause() {
         super.onPause()
@@ -203,6 +275,14 @@ class SoundActivity : AppCompatActivity() {
         super.onResume()
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             startListening()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == 1 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startListening()
+        } else {
+            statusText.text = "Permission denied"
         }
     }
 }
